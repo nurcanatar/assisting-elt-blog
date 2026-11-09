@@ -8,14 +8,52 @@ import PostDetailPage from './pages/PostDetailPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AdminPage from './pages/AdminPage';
+import TeacherPage from './pages/TeacherPage';
+import StudentPage from './pages/StudentPage';
+import AuthModal from './components/AuthModal';
 
+import { initDB, getCurrentUser, setCurrentUser as setDBCurrentUser } from './services/db';
 import { POSTS as INITIAL_POSTS } from './data/posts';
 import { CATEGORIES as INITIAL_CATEGORIES } from './data/categories';
 
 export default function App() {
-  
-  // Authentication State (Persistent via localStorage)
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+  // Initialize Database
+  useEffect(() => {
+    initDB();
+  }, []);
+
+  // Current Active User from Database
+  const [currentUser, setCurrUser] = useState(() => getCurrentUser());
+
+  // Auth Modal State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalDefaultTab, setAuthModalDefaultTab] = useState('student-login');
+
+  // Open Auth Modal helper
+  const handleOpenAuth = (tab = 'student-login') => {
+    setAuthModalDefaultTab(tab);
+    setIsAuthModalOpen(true);
+  };
+
+  // Auth Success Callback
+  const handleAuthSuccess = (user) => {
+    setCurrUser(user);
+    if (user.role === 'teacher') {
+      handleNavigate('teacher');
+    } else {
+      handleNavigate('student');
+    }
+  };
+
+  // Logout Callback
+  const handleUserLogout = () => {
+    setDBCurrentUser(null);
+    setCurrUser(null);
+    handleNavigate('home');
+  };
+
+  // Legacy Admin Auth State (for /admin blog editor)
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     return localStorage.getItem('assisting_auth') === 'true';
   });
 
@@ -54,32 +92,46 @@ export default function App() {
     localStorage.setItem('assisting_categories', JSON.stringify(categories));
   }, [categories]);
 
-  // Login Handler
-  const handleLogin = (username, password) => {
-    // Valid credentials: admin / 123456 or ogretmen / 123456
+  // Admin Login Handler
+  const handleAdminLogin = (username, password) => {
     if (
-      (username.toLowerCase() === 'admin' || username.toLowerCase() === 'ogretmen') &&
+      (username.toLowerCase() === 'admin' || username.toLowerCase() === 'nurcanelci') &&
       (password === '123456' || password === 'assisting123')
     ) {
-      setIsAuthenticated(true);
+      setIsAdminAuthenticated(true);
       localStorage.setItem('assisting_auth', 'true');
       return true;
     }
     return false;
   };
 
-  // Logout Handler
-  const handleLogout = () => {
-    setIsAuthenticated(false);
+  // Admin Logout Handler
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false);
     localStorage.removeItem('assisting_auth');
   };
 
-  // URL Helper to parse current path/query
+  // URL Helper to parse current path/query (Supports GitHub Pages sub-path)
   const parseUrlState = useCallback((currentPosts) => {
-    const path = window.location.pathname;
+    let path = window.location.pathname;
+    
+    // Normalize path by stripping GitHub Pages repo name if present
+    if (path.startsWith('/assisting-elt-blog')) {
+      path = path.replace('/assisting-elt-blog', '') || '/';
+    }
+
     const search = window.location.search;
+    const hash = window.location.hash;
     const params = new URLSearchParams(search);
     const postIdParam = params.get('post');
+    const pageParam = params.get('page');
+
+    if (pageParam === 'teacher' || hash === '#teacher' || path === '/teacher' || path === '/ogretmen') {
+      return { page: 'teacher', post: null, filter: 'all' };
+    }
+    if (pageParam === 'student' || hash === '#student' || path === '/student' || path === '/ogrenci') {
+      return { page: 'student', post: null, filter: 'all' };
+    }
 
     // Handle post detail URL (e.g. /post/1 or ?post=1)
     if (path.startsWith('/post/') || postIdParam) {
@@ -94,7 +146,7 @@ export default function App() {
       }
     }
 
-    if (path === '/admin' || window.location.hash === '#admin') return { page: 'admin', post: null, filter: 'all' };
+    if (path === '/admin' || hash === '#admin') return { page: 'admin', post: null, filter: 'all' };
     if (path === '/games') return { page: 'blog', post: null, filter: 'games' };
     if (path === '/drive') return { page: 'blog', post: null, filter: 'drive' };
     if (path === '/blog') return { page: 'blog', post: null, filter: 'all' };
@@ -134,25 +186,27 @@ export default function App() {
   // Navigate to a page with browser history push
   const handleNavigate = (page, post = null, fromAdmin = false) => {
     let targetUrl = '/';
-    if (page === 'admin') targetUrl = '/admin';
+    if (page === 'teacher') targetUrl = '#teacher';
+    else if (page === 'student') targetUrl = '#student';
+    else if (page === 'admin') targetUrl = '#admin';
     else if (page === 'blog') {
-      if (filterType === 'games') targetUrl = '/games';
-      else if (filterType === 'drive') targetUrl = '/drive';
-      else targetUrl = '/blog';
+      if (filterType === 'games') targetUrl = '#games';
+      else if (filterType === 'drive') targetUrl = '#drive';
+      else targetUrl = '#blog';
     }
-    else if (page === 'categories') targetUrl = '/categories';
-    else if (page === 'about') targetUrl = '/about';
-    else if (page === 'contact') targetUrl = '/contact';
+    else if (page === 'categories') targetUrl = '#categories';
+    else if (page === 'about') targetUrl = '#about';
+    else if (page === 'contact') targetUrl = '#contact';
     else if (page === 'post-detail' && post) {
-      targetUrl = `/post/${post.id}`;
+      targetUrl = `?post=${post.id}`;
     }
 
     const stateObj = { page, postId: post?.id, fromAdmin, filterType };
 
-    if (window.location.pathname !== targetUrl) {
+    try {
       window.history.pushState(stateObj, '', targetUrl);
-    } else {
-      window.history.replaceState(stateObj, '', targetUrl);
+    } catch (e) {
+      // In case of sandbox / file uri limitations
     }
 
     if (fromAdmin) {
@@ -196,11 +250,16 @@ export default function App() {
           setSelectedCategory={setSelectedCategory}
           filterType={filterType}
           setFilterType={setFilterType}
+          currentUser={currentUser}
+          onOpenAuth={handleOpenAuth}
+          onLogout={handleUserLogout}
         />
       )}
 
       {/* Main Content Area */}
       <main class="flex-grow">
+        
+        {/* Home Page */}
         {activePage === 'home' && (
           <HomePage 
             posts={posts}
@@ -217,6 +276,25 @@ export default function App() {
           />
         )}
 
+        {/* Teacher Panel (Nurcan Elçi) */}
+        {activePage === 'teacher' && (
+          <TeacherPage 
+            currentUser={currentUser}
+            onOpenAuth={handleOpenAuth}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {/* Student Panel */}
+        {activePage === 'student' && (
+          <StudentPage 
+            currentUser={currentUser}
+            onOpenAuth={handleOpenAuth}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {/* Blog & Materials List */}
         {activePage === 'blog' && (
           <BlogListPage 
             posts={posts}
@@ -230,6 +308,7 @@ export default function App() {
           />
         )}
 
+        {/* Grade Categories Page */}
         {activePage === 'categories' && (
           <CategoriesPage 
             posts={posts}
@@ -243,6 +322,7 @@ export default function App() {
           />
         )}
 
+        {/* Post Detail */}
         {activePage === 'post-detail' && selectedPost && (
           <PostDetailPage 
             post={selectedPost}
@@ -253,14 +333,17 @@ export default function App() {
           />
         )}
 
+        {/* About Page */}
         {activePage === 'about' && (
           <AboutPage />
         )}
 
+        {/* Contact Page */}
         {activePage === 'contact' && (
           <ContactPage />
         )}
 
+        {/* Admin Post Management Page */}
         {activePage === 'admin' && (
           <AdminPage 
             posts={posts}
@@ -272,9 +355,9 @@ export default function App() {
               handleNavigate(page);
             }}
             onSelectPost={handleSelectPost}
-            isAuthenticated={isAuthenticated}
-            onLogin={handleLogin}
-            onLogout={handleLogout}
+            isAuthenticated={isAdminAuthenticated}
+            onLogin={handleAdminLogin}
+            onLogout={handleAdminLogout}
           />
         )}
       </main>
@@ -289,6 +372,14 @@ export default function App() {
           setSelectedCategory={setSelectedCategory}
         />
       )}
+
+      {/* Global Auth Modal for Teacher & Student Login/Registration */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+        defaultTab={authModalDefaultTab}
+      />
 
     </div>
   );

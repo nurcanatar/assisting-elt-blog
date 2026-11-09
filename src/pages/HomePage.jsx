@@ -32,21 +32,72 @@ export default function HomePage({ posts, onSelectPost, onSelectCategory, onNavi
               <strong class="text-slate-800">assisting.com</strong> ile 5, 6, 7 ve 8. sınıf İngilizce derslerinize özel çalışma kağıtları, LGS sınav stratejileri, ünite kelime kartları ve dijital oyunlara anında ulaşın.
             </p>
 
+            {/* Portal Dual Access Cards */}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto pt-3 text-left">
+              <div 
+                onClick={() => onNavigate('teacher')}
+                class="p-5 rounded-2xl bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all cursor-pointer border border-indigo-700/50 group"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <span class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">
+                    👩‍🏫
+                  </span>
+                  <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-indigo-500/30 text-indigo-200 rounded-full border border-indigo-400/30">
+                    Öğretmen Girişi
+                  </span>
+                </div>
+                <h3 class="text-lg font-black tracking-tight text-white group-hover:text-brand-300 transition-colors">
+                  Öğretmen Masası
+                </h3>
+                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                  Yıllık planlar, öğrenci aktivite takibi, ödev puanlama ve sınıf araçları.
+                </p>
+                <div class="mt-4 flex items-center space-x-1 text-xs font-bold text-brand-300 group-hover:translate-x-1 transition-transform">
+                  <span>Masayı Aç</span>
+                  <ArrowRight class="w-4 h-4" />
+                </div>
+              </div>
+
+              <div 
+                onClick={() => onNavigate('student')}
+                class="p-5 rounded-2xl bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all cursor-pointer border border-brand-400/40 group"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <span class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
+                    🎒
+                  </span>
+                  <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-white/20 text-white rounded-full">
+                    Öğrenci Giriş & Kayıt
+                  </span>
+                </div>
+                <h3 class="text-lg font-black tracking-tight text-white group-hover:text-yellow-200 transition-colors">
+                  Öğrenci Portalı
+                </h3>
+                <p class="text-xs text-brand-100 mt-1 leading-relaxed">
+                  Kullanıcı adı ile giriş, ödevler, sesli kelime kartları ve mini testler.
+                </p>
+                <div class="mt-4 flex items-center space-x-1 text-xs font-bold text-white group-hover:translate-x-1 transition-transform">
+                  <span>Portala Giriş Yap</span>
+                  <ArrowRight class="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
             {/* CTA Buttons */}
             <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <button
                 onClick={() => onNavigate('blog')}
-                class="w-full sm:w-auto flex items-center justify-center space-x-2 px-7 py-3.5 text-sm sm:text-base font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-full shadow-lg shadow-brand-500/25 transition-all hover:scale-105"
+                class="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 text-sm font-bold text-slate-800 bg-white hover:bg-slate-100 border border-slate-300 rounded-full shadow-sm transition-all"
               >
-                <span>İngilizce Materyalleri Keşfet</span>
-                <ArrowRight class="w-5 h-5" />
+                <span>Tüm Materyalleri Keşfet</span>
+                <ArrowRight class="w-4 h-4 text-slate-500" />
               </button>
 
               <button
                 onClick={() => onNavigate('categories')}
-                class="w-full sm:w-auto flex items-center justify-center space-x-2 px-7 py-3.5 text-sm sm:text-base font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-full shadow-sm transition-all"
+                class="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full transition-all"
               >
-                <Compass class="w-5 h-5 text-slate-500" />
+                <Compass class="w-4 h-4 text-slate-500" />
                 <span>Sınıf Seviyeleri (5-8)</span>
               </button>
             </div>

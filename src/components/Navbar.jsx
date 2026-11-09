@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Menu, X, Search, Sparkles, BookOpenCheck, Settings, Gamepad2, HardDrive } from 'lucide-react';
+import { 
+  Menu, X, Search, Sparkles, BookOpenCheck, Settings, Gamepad2, 
+  HardDrive, GraduationCap, User, LogOut, ShieldCheck, UserPlus
+} from 'lucide-react';
 
 export default function Navbar({ 
   activePage, 
@@ -9,19 +12,32 @@ export default function Navbar({
   selectedCategory, 
   setSelectedCategory,
   filterType,
-  setFilterType
+  setFilterType,
+  currentUser,
+  onOpenAuth,
+  onLogout
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const navItems = [
     { id: 'home', label: 'Ana Sayfa' },
-    { id: 'blog', label: 'Materyaller & Blog' },
-    { id: 'categories', label: 'Sınıf Seviyeleri' },
+    { 
+      id: 'teacher', 
+      label: 'Öğretmen Masası', 
+      icon: GraduationCap, 
+      badgeColor: 'text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100 font-extrabold' 
+    },
+    { 
+      id: 'student', 
+      label: 'Öğrenci Portalı', 
+      icon: Sparkles, 
+      badgeColor: 'text-brand-700 bg-brand-50 border-brand-200 hover:bg-brand-100 font-extrabold' 
+    },
+    { id: 'blog', label: 'Materyaller' },
+    { id: 'categories', label: 'Sınıflar (5-8)' },
     { id: 'games', label: 'Oyunlar', icon: Gamepad2, badgeColor: 'text-rose-600 bg-rose-50 border-rose-200' },
-    { id: 'drive', label: 'Drive Materyalleri', icon: HardDrive, badgeColor: 'text-blue-600 bg-blue-50 border-blue-200' },
-    { id: 'about', label: 'Hakkında' },
-    { id: 'contact', label: 'İletişim' }
+    { id: 'drive', label: 'Drive', icon: HardDrive, badgeColor: 'text-blue-600 bg-blue-50 border-blue-200' },
   ];
 
   const handleNavClick = (itemId) => {
@@ -75,7 +91,7 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* Desktop Nav Links (Includes Oyunlar & Drive) */}
+          {/* Desktop Nav Links */}
           <nav class="hidden lg:flex items-center space-x-1">
             {navItems.map((item) => {
               const active = isItemActive(item.id);
@@ -102,29 +118,70 @@ export default function Navbar({
             {/* Admin Link */}
             <button
               onClick={() => handleNavClick('admin')}
-              class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-indigo-600 hover:bg-indigo-50 flex items-center space-x-1 transition-all border border-indigo-100"
-              title="Öğretmen Admin Paneli"
+              class="px-2.5 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 flex items-center space-x-1 transition-all"
+              title="Blog Yazı Yönetimi"
             >
-              <Settings class="w-4 h-4 text-indigo-500" />
+              <Settings class="w-3.5 h-3.5 text-slate-400" />
               <span>Admin</span>
             </button>
           </nav>
 
-          {/* Right Action & Search */}
-          <div class="hidden sm:flex items-center space-x-2">
+          {/* Right Action: Search + User Auth State */}
+          <div class="hidden sm:flex items-center space-x-3">
+            
+            {/* Search Input */}
             <div class="relative">
               <input
                 type="text"
-                placeholder="Materyal veya oyun ara..."
+                placeholder="Materyal ara..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   if (activePage !== 'blog') setActivePage('blog');
                 }}
-                class="w-36 md:w-44 lg:w-48 pl-8 pr-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                class="w-32 md:w-36 lg:w-40 pl-8 pr-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
               />
               <Search class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
             </div>
+
+            {/* Auth Button or User Badge */}
+            {currentUser ? (
+              <div class="flex items-center space-x-2 bg-slate-100 p-1.5 pl-3 rounded-full border border-slate-200 text-xs">
+                {currentUser.role === 'teacher' ? (
+                  <span 
+                    onClick={() => handleNavClick('teacher')}
+                    class="font-extrabold text-indigo-700 cursor-pointer hover:underline flex items-center space-x-1"
+                  >
+                    <span>👩‍🏫 Nurcan Elçi</span>
+                  </span>
+                ) : (
+                  <span 
+                    onClick={() => handleNavClick('student')}
+                    class="font-bold text-slate-800 cursor-pointer hover:underline flex items-center space-x-1"
+                  >
+                    <span>🎒 @{currentUser.username}</span>
+                    <span class="text-[10px] text-slate-400">({currentUser.grade}. Sınıf)</span>
+                  </span>
+                )}
+                
+                <button
+                  onClick={onLogout}
+                  class="p-1 text-slate-400 hover:text-rose-600 hover:bg-white rounded-full transition-colors"
+                  title="Çıkış Yap"
+                >
+                  <LogOut class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => onOpenAuth('student-login')}
+                class="px-3.5 py-1.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-full text-xs font-bold shadow-sm shadow-brand-500/20 transition-all flex items-center space-x-1.5"
+              >
+                <User class="w-3.5 h-3.5" />
+                <span>Giriş / Kayıt</span>
+              </button>
+            )}
+
           </div>
 
           {/* Mobile Right Controls */}
@@ -173,6 +230,43 @@ export default function Navbar({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div class="lg:hidden bg-white border-b border-slate-200 shadow-xl px-4 pt-2 pb-6 space-y-2 animate-fadeIn">
+          
+          {/* Mobile User Header */}
+          {currentUser ? (
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-xl">{currentUser.role === 'teacher' ? '👩‍🏫' : '🎒'}</span>
+                <div>
+                  <p class="text-xs font-black text-slate-900">{currentUser.name || currentUser.username}</p>
+                  <p class="text-[10px] text-slate-400">
+                    {currentUser.role === 'teacher' ? 'Yönetici Öğretmen' : `@${currentUser.username} (${currentUser.grade}. Sınıf)`}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onLogout}
+                class="px-2.5 py-1 bg-white border border-slate-200 text-rose-600 rounded-xl text-xs font-bold"
+              >
+                Çıkış
+              </button>
+            </div>
+          ) : (
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <button
+                onClick={() => { setMobileMenuOpen(false); onOpenAuth('student-login'); }}
+                class="py-2.5 bg-brand-600 text-white rounded-xl text-xs font-bold text-center shadow-sm"
+              >
+                Öğrenci Girişi
+              </button>
+              <button
+                onClick={() => { setMobileMenuOpen(false); onOpenAuth('teacher-login'); }}
+                class="py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold text-center shadow-sm"
+              >
+                Öğretmen Girişi
+              </button>
+            </div>
+          )}
+
           {navItems.map((item) => {
             const active = isItemActive(item.id);
             const IconComp = item.icon;
@@ -181,13 +275,13 @@ export default function Navbar({
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                class={`w-full text-left px-4 py-3 rounded-xl text-base font-semibold flex items-center space-x-2 transition-colors ${
+                class={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center space-x-2 transition-colors ${
                   active
                     ? 'bg-brand-50 text-brand-700 border-l-4 border-brand-600 font-bold'
                     : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                {IconComp && <IconComp class="w-5 h-5" />}
+                {IconComp && <IconComp class="w-4 h-4" />}
                 <span>{item.label}</span>
               </button>
             );
@@ -195,10 +289,10 @@ export default function Navbar({
           
           <button
             onClick={() => handleNavClick('admin')}
-            class="w-full text-left px-4 py-3 rounded-xl text-base font-bold text-indigo-600 bg-indigo-50 flex items-center space-x-2 border border-indigo-100"
+            class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-500 bg-slate-50 flex items-center space-x-2 border border-slate-200"
           >
-            <Settings class="w-5 h-5" />
-            <span>Admin Paneli</span>
+            <Settings class="w-4 h-4" />
+            <span>Admin Blog Yönetimi</span>
           </button>
         </div>
       )}

@@ -56,6 +56,12 @@ export default function Footer({ setActivePage, setSelectedCategory }) {
                 <button onClick={() => { setActivePage('home'); window.scrollTo(0, 0); }} class="hover:text-white transition-colors">Ana Sayfa</button>
               </li>
               <li>
+                <button onClick={() => { setActivePage('teacher'); window.scrollTo(0, 0); }} class="hover:text-white transition-colors font-bold text-indigo-400">👩‍🏫 Öğretmen Masası</button>
+              </li>
+              <li>
+                <button onClick={() => { setActivePage('student'); window.scrollTo(0, 0); }} class="hover:text-white transition-colors font-bold text-brand-400">🎒 Öğrenci Portalı</button>
+              </li>
+              <li>
                 <button onClick={() => { setActivePage('blog'); window.scrollTo(0, 0); }} class="hover:text-white transition-colors">Tüm İngilizce Materyalleri</button>
               </li>
               <li>
